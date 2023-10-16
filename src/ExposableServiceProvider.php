@@ -64,6 +64,12 @@ class ExposableServiceProvider extends ServiceProvider
             $middleware = array_merge($middleware, (array) config('exposable.middleware'));
         }
 
+        if (config('exposable.routes')) {
+            foreach (config('exposable.routes') as $type => $controller) {
+                $this->app['router']->get(config('exposable.url-prefix').'/'.$type.'/{id}', $controller)->middleware($middleware);
+            }
+        }
+
         $uri = config('exposable.url-prefix').'/{exposable}/{id}';
 
         $this->app['router']->get($uri, 'ArjanWestdorp\Exposable\Http\Controllers\ExposableController@show')->middleware($middleware)->name('exposable.show');
