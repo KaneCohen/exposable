@@ -7,8 +7,7 @@ use ArjanWestdorp\Exposable\Signers\Signer;
 
 class BaseSignerTest extends TestCase
 {
-    /** @test */
-    public function parameters_can_be_added_to_a_signer()
+    public function test_parameters_can_be_added_to_a_signer()
     {
         $signer = Signer::url('https://www.test.com/attachment/1')->add('expire', 'tomorrow')->add('guard', 'none');
 
@@ -16,8 +15,7 @@ class BaseSignerTest extends TestCase
         $this->assertEquals('tomorrow', $signer->get('expire'));
     }
 
-    /** @test */
-    public function parameters_will_be_stripped_from_a_url_on_creation()
+    public function test_parameters_will_be_stripped_from_a_url_on_creation()
     {
         $signer = Signer::url('https://www.test.com/attachment/1?first=one&second=two');
 
@@ -25,24 +23,21 @@ class BaseSignerTest extends TestCase
         $this->assertEquals('one', $signer->get('first'));
     }
 
-    /** @test */
-    public function a_parameter_can_be_removed_from_a_url()
+    public function test_a_parameter_can_be_removed_from_a_url()
     {
         $signer = Signer::url('https://www.test.com/attachment/1?first=one&second=two')->delete('first');
 
         $this->assertEquals(1, $signer->parameters());
     }
 
-    /** @test */
-    public function parameters_can_be_sorted_in_a_url()
+    public function test_parameters_can_be_sorted_in_a_url()
     {
         $signer = Signer::url('https://www.test.com/attachment/1?second=two&first=one')->sort();
 
         $this->assertEquals('https://www.test.com/attachment/1?first=one&second=two', $signer->url());
     }
 
-    /** @test */
-    public function a_url_can_be_signed()
+    public function test_a_url_can_be_signed()
     {
         $url = Signer::url('https://www.test.com/attachment/1?first=one&second=two')->sign();
 
@@ -52,16 +47,14 @@ class BaseSignerTest extends TestCase
         $this->assertTrue($signed->has('signature'));
     }
 
-    /** @test */
-    public function a_url_can_be_validated_based_on_the_signature()
+    public function test_a_url_can_be_validated_based_on_the_signature()
     {
         $url = Signer::url('https://www.test.com/attachment/1?first=one&second=two')->sign();
 
         $this->assertTrue(Signer::validate($url));
     }
 
-    /** @test */
-    public function a_url_will_be_marked_as_invalid_if_there_is_something_changed_after_signing()
+    public function test_a_url_will_be_marked_as_invalid_if_there_is_something_changed_after_signing()
     {
         $url = Signer::url('https://www.test.com/attachment/1?first=one&second=two')->sign();
 
@@ -70,8 +63,7 @@ class BaseSignerTest extends TestCase
         $this->assertFalse(Signer::validate($url));
     }
 
-    /** @test */
-    public function a_url_will_be_marked_as_invalid_if_no_signature_parameter_is_given()
+    public function test_a_url_will_be_marked_as_invalid_if_no_signature_parameter_is_given()
     {
         $this->assertFalse(Signer::validate('https://www.test.com/attachment/1'));
     }

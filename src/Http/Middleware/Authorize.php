@@ -3,6 +3,7 @@
 namespace ArjanWestdorp\Exposable\Http\Middleware;
 
 use Closure;
+use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
 use ArjanWestdorp\Exposable\Guards\Guard;
 use ArjanWestdorp\Exposable\Exceptions\InvalidGuardException;
@@ -47,7 +48,7 @@ class Authorize
      */
     protected function retrieveGuard($key)
     {
-        $class = array_get(config('exposable.guards'), $key);
+        $class = Arr::get(config('exposable.guards'), $key);
 
         if (is_null($class)) {
             throw InvalidGuardException::guardNotDefined($key);

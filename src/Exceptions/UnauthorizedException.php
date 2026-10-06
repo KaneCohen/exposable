@@ -18,7 +18,7 @@ class UnauthorizedException extends Exception
      * @param string $message
      * @param Guard $guard
      */
-    public function __construct($message, Guard $guard = null)
+    public function __construct($message, ?Guard $guard = null)
     {
         parent::__construct($message);
 

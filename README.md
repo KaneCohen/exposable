@@ -1,7 +1,7 @@
 ## Laravel exposable
 [![Latest Stable Version](https://poser.pugx.org/arjanwestdorp/exposable/v/stable?format=flat-square)](https://packagist.org/packages/arjanwestdorp/exposable)
 [![License](https://poser.pugx.org/arjanwestdorp/exposable/license?format=flat-square)](https://packagist.org/packages/arjanwestdorp/exposable)
-[![Build Status](https://img.shields.io/travis/arjanwestdorp/exposable/master.svg?style=flat-square)](https://travis-ci.org/arjanwestdorp/exposable)
+[![Tests](https://github.com/KaneCohen/exposable/actions/workflows/tests.yml/badge.svg)](https://github.com/KaneCohen/exposable/actions/workflows/tests.yml)
 [![Quality Score](https://img.shields.io/scrutinizer/g/arjanwestdorp/exposable.svg?style=flat-square)](https://scrutinizer-ci.com/g/arjanwestdorp/exposable)
 [![Coverage](https://img.shields.io/scrutinizer/coverage/g/arjanwestdorp/exposable.svg?style=flat-square)](https://scrutinizer-ci.com/g/arjanwestdorp/exposable)
 [![StyleCI](https://styleci.io/repos/89977324/shield)](https://styleci.io/repos/89977324)
@@ -12,10 +12,15 @@ Laravel exposable will make this much easier for you now.
 
 ## Version Compatibility
 
- Laravel  | Exposable
-:---------|:----------
- 5.3      | 1.0.x
- 5.4      | 1.1.x
+Exposable **3.0.0** targets PHP **8.4.x** and Laravel **10.50.3+, 11.57.0+,
+12.69.3+ and 13.34.0+** within those majors. Carbon 2 is tested on Laravel
+10/11; Carbon 3 is tested on Laravel 11–13. Laravel 10/PHP 8.4 is a migration
+checkpoint outside Laravel's official PHP support range.
+
+See the [exact tested matrix, fixture provenance and release notes](docs/COMPATIBILITY.md).
+Existing valid signed URLs remain compatible when `exposable.key` is unchanged.
+
+Older releases: Exposable 1.0.x targeted Laravel 5.3; 1.1.x targeted Laravel 5.4.
 
 ## Installation
 The recommended way to install Exposable is through composer:
@@ -42,7 +47,7 @@ Add the `Exposable` trait to the model(s) you want to expose:
 ```php
 namespace App;
     
-use ArjanWestdorp\Exposable\Exposable;
+use ArjanWestdorp\Exposable\Traits\Exposable;
 use Illuminate\Database\Eloquent\Model;
     
 class File extends Model {
@@ -56,7 +61,7 @@ Next, you will need to implement the `expose` method on your model:
 ```php
 namespace App;
     
-use ArjanWestdorp\Exposable\Exposable;
+use ArjanWestdorp\Exposable\Traits\Exposable;
 use Illuminate\Database\Eloquent\Model;
     
 class File extends Model {
@@ -94,7 +99,7 @@ echo $file->exposeUrl();
 Configuration is mainly done through the config file. Although there is the option to deviate on model level.
 
 ### Config file
-Below an explanation of all options in the [config file](/arjanwestdorp/exposable/blob/master/src/config/exposable.php).
+Below an explanation of all options in the [config file](config/exposable.php).
 
 #### key
 The key which is used to sign the expose urls. By default it uses the Laravel key of you application.
@@ -151,11 +156,17 @@ Default: true
 ```
 
 ### Model configuration
+If a guard or lifetime property is absent, the configured default is used.
+An explicitly null property stays null. `setExposableGuard()` and
+`setExposableLifetime()` override the current instance without creating dynamic
+properties or database attributes. Runtime overrides are not persisted to the database. Clones retain those
+settings and can override them independently.
+
 On a model you can override the default lifetime and the guard which are used to expose:
 ```php
 namespace App;
     
-use ArjanWestdorp\Exposable\Exposable;
+use ArjanWestdorp\Exposable\Traits\Exposable;
 use Illuminate\Database\Eloquent\Model;
     
 class File extends Model {

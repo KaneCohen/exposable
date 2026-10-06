@@ -2,12 +2,8 @@
 
 namespace ArjanWestdorp\Exposable\Test;
 
-use Exception;
 use Carbon\Carbon;
-use Illuminate\Foundation\Exceptions\Handler;
-use Orchestra\Database\ConsoleServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
-use Illuminate\Contracts\Debug\ExceptionHandler;
 use ArjanWestdorp\Exposable\Test\Stubs\Attachment;
 use ArjanWestdorp\Exposable\ExposableServiceProvider;
 use ArjanWestdorp\Exposable\Test\Stubs\FakeAuthenticatedGuard;
@@ -18,15 +14,12 @@ class TestCase extends Orchestra
     /**
      * Setup the test environment.
      */
-    public function setUp()
+    public function setUp(): void
     {
         parent::setUp();
 
         // Load migrations
         $this->loadMigrations();
-
-        // Load the factories.
-        $this->withFactories(__DIR__.'/factories');
 
         Carbon::setTestNow(Carbon::create(2017, 1, 1, 9, 0, 0));
 
@@ -52,10 +45,7 @@ class TestCase extends Orchestra
     {
         $this->loadLaravelMigrations(['--database' => 'testbench']);
 
-        $this->loadMigrationsFrom([
-            '--database' => 'testbench',
-            '--realpath' => realpath(__DIR__.'/migrations'),
-        ]);
+        $this->loadMigrationsFrom(__DIR__.'/migrations');
     }
 
     /**
@@ -96,7 +86,6 @@ class TestCase extends Orchestra
     protected function getPackageProviders($app)
     {
         return [
-            ConsoleServiceProvider::class,
             ExposableServiceProvider::class,
         ];
     }
@@ -128,7 +117,7 @@ class TestCase extends Orchestra
      */
     protected function disableExceptionHandling()
     {
-        app()->instance(ExceptionHandler::class, new PassThroughHandler);
+        $this->withoutExceptionHandling();
 
         return $this;
     }
@@ -140,7 +129,23 @@ class TestCase extends Orchestra
      */
     protected function createAttachment()
     {
-        return factory(Attachment::class)->create();
+        $attachment = new Attachment();
+        $attachment->forceFill(['name' => 'test.pdf', 'content' => 'fixture content'])->save();
+
+        return $attachment;
+    }
+
+    protected function createUser()
+    {
+        return \ArjanWestdorp\Exposable\Test\Stubs\User::create([
+            'name' => 'Fixture User', 'email' => 'fixture@example.test', 'password' => bcrypt('secret'),
+        ]);
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+        parent::tearDown();
     }
 
     /**
@@ -165,23 +170,5 @@ class TestCase extends Orchestra
         $this->config('default-guard', 'unauthenticated');
 
         return $this;
-    }
-}
-
-class PassThroughHandler extends Handler
-{
-    public function __construct()
-    {
-        parent::__construct(app());
-    }
-
-    public function report(Exception $e)
-    {
-        // no-op
-    }
-
-    public function render($request, Exception $e)
-    {
-        throw $e;
     }
 }

@@ -1,0 +1,42 @@
+name: PHP 8.4 compatibility
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        row:
+          - laravel10-carbon2
+          - laravel11-carbon2
+          - laravel11-carbon3-min
+          - laravel11-carbon3
+          - laravel12-carbon3
+          - laravel13-carbon3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: intl, mbstring, pdo_sqlite
+          coverage: none
+          tools: composer:v2
+          ini-values: error_reporting=E_ALL
+      - name: Test isolated dependency matrix
+        env:
+          EXPOSABLE_MATRIX_DIR: ${{ runner.temp }}/exposable-matrix
+          COMPOSER_CACHE_DIR: ${{ runner.temp }}/composer-cache
+        run: php tools/test-matrix.php '${{ matrix.row }}'
+      - name: Save versions and complete E_ALL reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.row }}
+          path: |
+            ${{ runner.temp }}/exposable-matrix/**/composer.json
+            ${{ runner.temp }}/exposable-matrix/**/composer.lock
+            ${{ runner.temp }}/exposable-matrix/**/*.log
+            ${{ runner.temp }}/exposable-matrix/**/result.json
+            ${{ runner.temp }}/exposable-matrix/**/junit.xml

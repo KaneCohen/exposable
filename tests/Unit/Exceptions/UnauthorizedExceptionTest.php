@@ -8,8 +8,7 @@ use ArjanWestdorp\Exposable\Test\Stubs\FakeAuthenticatedGuard;
 
 class UnauthorizedExceptionTest extends TestCase
 {
-    /** @test */
-    public function it_can_return_the_guard_the_exception_occurred_for()
+    public function test_it_can_return_the_guard_the_exception_occurred_for()
     {
         $guard = app(FakeAuthenticatedGuard::class);
 

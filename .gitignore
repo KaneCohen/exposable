@@ -1,5 +1,6 @@
-build
-composer.lock
+build/
+/composer.lock
 vendor
-.idea
+.idea/
 .DS_Store
+*.bak

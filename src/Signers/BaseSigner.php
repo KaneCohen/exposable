@@ -3,8 +3,7 @@
 namespace ArjanWestdorp\Exposable\Signers;
 
 use League\Uri\Http;
-use League\Uri\Components\Query;
-use League\Uri\Modifiers\KsortQuery;
+use ArjanWestdorp\Exposable\Signers\Internal\SigningQuery;
 
 abstract class BaseSigner
 {
@@ -22,6 +21,10 @@ abstract class BaseSigner
      * @var string
      */
     private $key;
+
+    private bool $emptyQuery = false;
+
+    private bool $emptyFragment = false;
 
     /**
      * Signer constructor.
@@ -41,19 +44,19 @@ abstract class BaseSigner
      */
     public function has($key)
     {
-        $query = new Query($this->uri->getQuery());
+        $query = SigningQuery::new($this->uri->getQuery());
 
-        return $query->hasPair($key);
+        return $query->has($key);
     }
 
     /**
-     * Get the count of query parameters in the url.
+     * Get the count of distinct query parameter keys in the url.
      *
      * @return int
      */
     public function parameters()
     {
-        $query = new Query($this->uri->getQuery());
+        $query = SigningQuery::new($this->uri->getQuery());
 
         return $query->count();
     }
@@ -68,9 +71,9 @@ abstract class BaseSigner
     {
         $this->sort();
 
-        $this->add('signature', urlencode($this->getSignature($this->uri->__toString())));
+        $this->add('signature', urlencode($this->getSignature($this->serializedUrl())));
 
-        return $this->uri->__toString();
+        return $this->serializedUrl();
     }
 
     /**
@@ -80,9 +83,9 @@ abstract class BaseSigner
      */
     public function sort()
     {
-        $modifier = new KsortQuery();
-
-        $this->uri = $modifier->process($this->uri);
+        $query = SigningQuery::new($this->uri->getQuery())->sort();
+        $this->emptyQuery = false;
+        $this->uri = $this->uri->withQuery((string) $query);
 
         return $this;
     }
@@ -96,11 +99,10 @@ abstract class BaseSigner
      */
     public function add($key, $value)
     {
-        $query = new Query($this->uri->getQuery());
-        $query = $query->merge(Query::createFromPairs([
-            $key => $value,
-        ]));
+        $query = SigningQuery::new($this->uri->getQuery());
+        $query = $query->add($key, $value);
 
+        $this->emptyQuery = false;
         $this->uri = $this->uri->withQuery($query->__toString());
 
         return $this;
@@ -125,28 +127,29 @@ abstract class BaseSigner
      */
     public function validate($url)
     {
-        $signature = Signer::url($url)->get('signature');
+        $candidate = (new static($this->key))->url($url);
+        $signature = $candidate->get('signature');
 
-        if (is_null($signature)) {
+        if (! is_string($signature)) {
             return false;
         }
 
-        $url = Signer::url($url)->delete('signature')->url();
+        $url = $candidate->delete('signature')->url();
 
         return hash_equals($signature, $this->getSignature($url));
     }
 
     /**
-     * Get a parameter of the url based on it's key.
+     * Get a parameter of the url based on its key.
      *
      * @param string $key
-     * @return string
+     * @return string|array|null
      */
     public function get($key)
     {
-        $query = new Query($this->uri->getQuery());
+        $query = SigningQuery::new($this->uri->getQuery());
 
-        return $query->getPair($key);
+        return $query->get($key);
     }
 
     /**
@@ -154,17 +157,33 @@ abstract class BaseSigner
      * If no parameter is given return the url.
      *
      * @param string|null $url
-     * @return string
+     * @return $this|string
      */
     public function url($url = null)
     {
         if (! is_null($url)) {
-            $this->uri = Http::createFromString($url);
+            $this->uri = Http::new($url);
+            $this->emptyQuery = '' === parse_url($url, PHP_URL_QUERY);
+            $this->emptyFragment = '' === parse_url($url, PHP_URL_FRAGMENT);
 
             return $this;
         }
 
-        return $this->uri->__toString();
+        return $this->serializedUrl();
+    }
+
+    private function serializedUrl(): string
+    {
+        $url = (string) $this->uri;
+        if ($this->emptyQuery) {
+            $fragment = strpos($url, '#');
+            $url = false === $fragment ? $url.'?' : substr_replace($url, '?', $fragment, 0);
+        }
+        if ($this->emptyFragment) {
+            $url .= '#';
+        }
+
+        return $url;
     }
 
     /**
@@ -175,10 +194,11 @@ abstract class BaseSigner
      */
     public function delete($key)
     {
-        $query = new Query($this->uri->getQuery());
+        $query = SigningQuery::new($this->uri->getQuery());
 
-        $without = $query->withoutPairs([$key]);
+        $without = $query->delete($key);
 
+        $this->emptyQuery = false;
         $this->uri = $this->uri->withQuery($without->__toString());
 
         return $this;

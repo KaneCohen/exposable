@@ -8,8 +8,7 @@ use ArjanWestdorp\Exposable\Exceptions\InvalidSignatureException;
 
 class CheckSignatureTest extends TestCase
 {
-    /** @test */
-    public function it_will_throw_an_exception_if_the_signature_does_not_match_with_the_url()
+    public function test_it_will_throw_an_exception_if_the_signature_does_not_match_with_the_url()
     {
         $this->disableExceptionHandling()->expectException(InvalidSignatureException::class);
 
@@ -30,16 +29,14 @@ class CheckSignatureTest extends TestCase
         return Signer::url($url ?: url('/middleware-signature'))->sign();
     }
 
-    /** @test */
-    public function it_will_throw_an_exception_if_no_signature_is_given()
+    public function test_it_will_throw_an_exception_if_no_signature_is_given()
     {
         $this->disableExceptionHandling()->expectException(InvalidSignatureException::class);
 
         $this->get(url('/middleware-signature'));
     }
 
-    /** @test */
-    public function it_will_throw_an_exception_if_there_is_tampered_with_the_url()
+    public function test_it_will_throw_an_exception_if_there_is_tampered_with_the_url()
     {
         $this->disableExceptionHandling()->expectException(InvalidSignatureException::class);
 
@@ -49,8 +46,7 @@ class CheckSignatureTest extends TestCase
         $this->get($url);
     }
 
-    /** @test */
-    public function it_will_succeed_if_the_signature_matches_the_url()
+    public function test_it_will_succeed_if_the_signature_matches_the_url()
     {
         $this->get($this->getSignedUrl())->assertSuccessful()->assertSee('You did it');
     }

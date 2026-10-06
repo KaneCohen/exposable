@@ -8,6 +8,15 @@ use ArjanWestdorp\Exposable\Exceptions\InvalidExposableException;
 
 trait Exposable
 {
+    // Keep runtime settings separate from the consuming model's optional
+    // exposableGuard/exposableLifetime properties and Eloquent attributes.
+    private array $__exposableInstanceOverrides = [];
+
+    private function setExposableOverride($key, $value)
+    {
+        $this->__exposableInstanceOverrides[$key] = $value;
+    }
+
     /**
      * Expose the model.
      *
@@ -53,11 +62,16 @@ trait Exposable
      */
     protected function getExposableGuard()
     {
+        $settings = $this->__exposableInstanceOverrides;
+        if (array_key_exists('guard', $settings)) {
+            return $settings['guard'];
+        }
+
         if (property_exists($this, 'exposableGuard')) {
             return $this->exposableGuard;
         }
 
-        return $this->exposableGuard ?: config('exposable.default-guard');
+        return config('exposable.default-guard');
     }
 
     /**
@@ -73,7 +87,7 @@ trait Exposable
             throw InvalidGuardException::guardNotDefined($guard);
         }
 
-        $this->exposableGuard = $guard;
+        $this->setExposableOverride('guard', $guard);
 
         return $this;
     }
@@ -85,11 +99,16 @@ trait Exposable
      */
     protected function getExposableLifetime()
     {
+        $settings = $this->__exposableInstanceOverrides;
+        if (array_key_exists('lifetime', $settings)) {
+            return $settings['lifetime'];
+        }
+
         if (property_exists($this, 'exposableLifetime')) {
             return $this->exposableLifetime;
         }
 
-        return $this->exposableLifetime ?: config('exposable.lifetime');
+        return config('exposable.lifetime');
     }
 
     /**
@@ -100,7 +119,7 @@ trait Exposable
      */
     public function setExposableLifetime($expire)
     {
-        $this->exposableLifetime = $expire;
+        $this->setExposableOverride('lifetime', $expire);
 
         return $this;
     }

@@ -21,18 +21,16 @@ class ApplicationMiddlewareCanBeUsedTest extends TestCase
         return parent::getPackageProviders($app);
     }
 
-    /** @test */
-    public function it_will_use_the_application_auth_middleware_and_fail_without_user()
+    public function test_it_will_use_the_application_auth_middleware_and_fail_without_user()
     {
         $this->disableExceptionHandling()->useAuthenticatedGuard()->expectException(AuthenticationException::class);
 
-        $this->get($this->createAttachment()->exposeUrl())->assertStatus(401);
+        $this->get($this->createAttachment()->exposeUrl(), ['Accept' => 'application/json'])->assertStatus(401);
     }
 
-    /** @test */
-    public function it_will_use_the_application_auth_middleware_and_succeed_with_a_user()
+    public function test_it_will_use_the_application_auth_middleware_and_succeed_with_a_user()
     {
-        $this->be(factory(User::class)->create());
+        $this->be($this->createUser());
 
         $this->get($this->createAttachment()->exposeUrl())->assertStatus(200)->assertSee('You did it');
     }

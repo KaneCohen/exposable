@@ -8,18 +8,16 @@ use ArjanWestdorp\Exposable\Exceptions\UnauthorizedException;
 
 class AuthGuardTest extends TestCase
 {
-    /** @test */
-    public function it_authenticates_if_the_user_is_logged_in()
+    public function test_it_authenticates_if_the_user_is_logged_in()
     {
-        $this->be(factory(User::class)->create());
+        $this->be($this->createUser());
 
         $this->get(url('/middleware-guard?guard=auth'))
             ->assertSuccessful()
             ->assertSee('You did it');
     }
 
-    /** @test */
-    public function it_does_not_authenticate_if_the_user_is_not_logged_in()
+    public function test_it_does_not_authenticate_if_the_user_is_not_logged_in()
     {
         $this->disableExceptionHandling()->expectException(UnauthorizedException::class);
 

@@ -1,0 +1,10 @@
+{
+  "require": {
+    "league/uri": "5.3.0"
+  },
+  "config": {
+    "audit": {
+      "block-insecure": false
+    }
+  }
+}
